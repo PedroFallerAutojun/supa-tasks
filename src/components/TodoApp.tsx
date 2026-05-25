@@ -1,5 +1,5 @@
 import { useEffect, useState, FormEvent } from "react";
-import { Plus, Trash2, CheckCircle2, Circle, ListTodo, Loader2 } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Circle, ListTodo, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Task = {
@@ -14,6 +14,7 @@ export function TodoApp() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
 
   useEffect(() => {
     void load();
@@ -52,7 +53,10 @@ export function TodoApp() {
     await supabase.from("tasks").update({ completed: next }).eq("id", task.id);
   }
 
-  async function deleteTask(id: string) {
+  async function confirmDelete() {
+    if (!deletingTask) return;
+    const id = deletingTask.id;
+    setDeletingTask(null);
     setTasks((prev) => prev.filter((t) => t.id !== id));
     await supabase.from("tasks").delete().eq("id", id);
   }
@@ -139,8 +143,8 @@ export function TodoApp() {
                 {task.title}
               </span>
               <button
-                onClick={() => deleteTask(task.id)}
-                className="flex-shrink-0 p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                onClick={() => setDeletingTask(task)}
+                className="flex-shrink-0 p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
                 aria-label="Excluir tarefa"
               >
                 <Trash2 className="w-4 h-4" />
@@ -149,6 +153,52 @@ export function TodoApp() {
           ))}
         </ul>
       </div>
+
+      {/* Modal de confirmação de exclusão */}
+      {deletingTask && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          onClick={() => setDeletingTask(null)}
+        >
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-sm rounded-2xl bg-card border border-border p-6"
+            style={{ boxShadow: "var(--shadow-card)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setDeletingTask(null)}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="mb-5">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-destructive/10 text-destructive mb-4">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <h2 className="text-lg font-semibold mb-1">Excluir tarefa?</h2>
+              <p className="text-muted-foreground text-sm">
+                A tarefa "<span className="text-foreground font-medium">{deletingTask.title}</span>" será removida permanentemente. Esta ação não pode ser desfeita.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeletingTask(null)}
+                className="flex-1 px-4 py-2.5 rounded-xl font-medium text-sm bg-muted text-foreground hover:bg-muted/80 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2.5 rounded-xl font-medium text-sm text-destructive-foreground bg-destructive hover:bg-destructive/90 transition-all"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
