@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from "react";
 import { Plus, Trash2, CheckCircle2, Circle, ListTodo, Loader2, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 type Task = {
   id: string;
