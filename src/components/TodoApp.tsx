@@ -23,7 +23,7 @@ export function TodoApp() {
   async function load() {
     setLoading(true);
     const { data, error } = await supabase
-      .from("tasks")
+      .from("todos")
       .select("*")
       .order("created_at", { ascending: false });
     if (!error && data) setTasks(data as Task[]);
@@ -36,7 +36,7 @@ export function TodoApp() {
     if (!value) return;
     setAdding(true);
     const { data, error } = await supabase
-      .from("tasks")
+      .from("todos")
       .insert({ title: value })
       .select()
       .single();
@@ -50,7 +50,7 @@ export function TodoApp() {
   async function toggleTask(task: Task) {
     const next = !task.completed;
     setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, completed: next } : t)));
-    await supabase.from("tasks").update({ completed: next }).eq("id", task.id);
+    await supabase.from("todos").update({ completed: next }).eq("id", task.id);
   }
 
   async function confirmDelete() {
@@ -58,7 +58,7 @@ export function TodoApp() {
     const id = deletingTask.id;
     setDeletingTask(null);
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    await supabase.from("tasks").delete().eq("id", id);
+    await supabase.from("todos").delete().eq("id", id);
   }
 
   const remaining = tasks.filter((t) => !t.completed).length;
